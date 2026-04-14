@@ -23,27 +23,28 @@ import java.lang.foreign.*
 object Interception {
 
     private val linker = Linker.nativeLinker()
-    private val interception = SymbolLookup.libraryLookup("interception", MemorySession.global())
+    private val interception = SymbolLookup.libraryLookup("interception", Arena.global())
 
     private val interception_create_context = linker.downcallHandle(
-        interception.lookup("interception_create_context").get(),
+        interception.find("interception_create_context").get(),
         FunctionDescriptor.of(ValueLayout.ADDRESS)
     )
 
     val interceptionContext = interception_create_context()
 
-    private fun interception_create_context() = interception_create_context.invokeExact() as MemoryAddress
+    private fun interception_create_context() = interception_create_context.invokeExact() as MemorySegment
 
     val interceptionMouseStrokeLayout: GroupLayout = MemoryLayout.structLayout(
-        ValueLayout.JAVA_SHORT,
-        ValueLayout.JAVA_SHORT,
-        ValueLayout.JAVA_SHORT,
-        ValueLayout.JAVA_INT,
-        ValueLayout.JAVA_INT,
-        ValueLayout.JAVA_INT
+        ValueLayout.JAVA_SHORT,                    // state:       offset 0
+        ValueLayout.JAVA_SHORT,                    // flags:       offset 2
+        ValueLayout.JAVA_SHORT,                    // rolling:     offset 4
+        MemoryLayout.paddingLayout(16),            // padding:     offset 6  (16 bits = 2 bytes)
+        ValueLayout.JAVA_INT,                      // x:           offset 8
+        ValueLayout.JAVA_INT,                      // y:           offset 12
+        ValueLayout.JAVA_INT                       // information: offset 16
     )
 
-    private fun interceptionSendSymbol() = interception.lookup("interception_send").get()
+    private fun interceptionSendSymbol() = interception.find("interception_send").get()
 
     private val interception_send = linker.downcallHandle(
         interceptionSendSymbol(),
@@ -53,7 +54,7 @@ object Interception {
         )
     )
 
-    fun interception_send(context: Addressable, device: Int, stroke: MemorySegment, strokeCount: Int) =
+    fun interception_send(context: MemorySegment, device: Int, stroke: MemorySegment, strokeCount: Int) =
         interception_send.invokeExact(
             context,
             device,

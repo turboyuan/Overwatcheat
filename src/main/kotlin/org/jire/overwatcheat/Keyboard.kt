@@ -22,8 +22,8 @@ import org.jire.overwatcheat.nativelib.User32Panama
 import org.jire.overwatcheat.nativelib.interception.Interception.interceptionContext
 import org.jire.overwatcheat.nativelib.interception.Interception.interception_send
 import org.jire.overwatcheat.nativelib.interception.InterceptionKeyState
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.lang.foreign.MemorySession
 import java.lang.foreign.ValueLayout
 
 object Keyboard {
@@ -35,7 +35,7 @@ object Keyboard {
     fun keyReleased(virtualKeyCode: Int) = !keyPressed(virtualKeyCode)
 
     val keyStroke =
-        MemorySegment.allocateNative(18, 4, MemorySession.global()).apply {
+        Arena.global().allocate(18, 4).apply {
             set(ValueLayout.JAVA_SHORT, 0, 0) // code
             set(ValueLayout.JAVA_SHORT, 2, 0) // state
             set(ValueLayout.JAVA_INT, 4, 0) // information

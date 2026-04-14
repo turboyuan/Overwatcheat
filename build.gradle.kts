@@ -14,9 +14,12 @@ group = "org.jire.overwatcheat"
 version = "5.1.0"
 
 kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(19))
-    }
+    jvmToolchain(21)
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    sourceCompatibility = "21"
+    targetCompatibility = "21"
 }
 
 dependencies {
@@ -116,6 +119,12 @@ fun TaskContainerScope.configureOverwatcheat() {
             dir.copyFromRoot("overwatcheat.cfg")
             dir.copyFromRoot("LICENSE.txt")
             dir.copyFromRoot("README.md")
+
+            // 自动复制 interception.dll（如果存在）
+            val interceptionDll = file("Interception/library/x64/interception.dll")
+            if (interceptionDll.exists()) {
+                interceptionDll.copyTo(dir.resolve("interception.dll"), true)
+            }
         }
     }
 }

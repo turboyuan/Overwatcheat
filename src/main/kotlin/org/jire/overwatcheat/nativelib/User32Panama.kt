@@ -23,17 +23,17 @@ import java.lang.foreign.*
 object User32Panama {
 
     val linker = Linker.nativeLinker()
-    val user32 = SymbolLookup.libraryLookup("User32", MemorySession.global())
+    val user32 = SymbolLookup.libraryLookup("User32", Arena.global())
 
     private val getKeyState = linker.downcallHandle(
-        user32.lookup("GetKeyState").get(),
+        user32.find("GetKeyState").get(),
         FunctionDescriptor.of(ValueLayout.JAVA_SHORT, ValueLayout.JAVA_INT)
     )
 
     fun GetKeyState(nVirtKey: Int): Short = getKeyState.invokeExact(nVirtKey) as Short
 
     private val mapVirtualKeyA = linker.downcallHandle(
-        user32.lookup("MapVirtualKeyA").get(),
+        user32.find("MapVirtualKeyA").get(),
         FunctionDescriptor.of(
             ValueLayout.JAVA_INT,
             ValueLayout.JAVA_INT, ValueLayout.JAVA_INT

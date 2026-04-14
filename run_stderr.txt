@@ -1,0 +1,34 @@
+[main] INFO net.openhft.chronicle.core.Jvm - Chronicle core loaded from file:/D:/Overwatcheat/build/overwatcheat/overwatcheat.jar
+Info: [gdigrab @ 00000248f967e180] Found window run.bat - Overwatcheat - CodeBuddy CN, capturing 64x32x32 at (1248,704)
+
+[Aim Bot] INFO net.openhft.affinity.AffinityLock - Assigning cpu 2 to Thread[#59,Aim Bot,9,main] on thread id 27256
+[Aim Bot] WARN net.openhft.affinity.impl.WindowsJNAAffinity - Tried to set affinity to {2} but was {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23} you may have in sufficient access rights
+Info: Input #0, gdigrab, from 'title=run.bat - Overwatcheat - CodeBuddy CN':
+
+Info:   Duration: 
+Info: N/A
+Info: , start: 
+Info: 1776164244.631522
+Info: , bitrate: 
+Info: 3958 kb/s
+Info: 
+
+Info:   Stream #0:0
+Info: : Video: bmp, bgr0, 64x32, 3958 kb/s
+Info: , 
+Info: 60 fps, 
+Info: 1000k tbr, 
+Info: 1000k tbn
+Info: 
+
+Exception in thread "Toggle UI" java.lang.ExceptionInInitializerError
+	at org.jire.overwatcheat.Keyboard.pressKey(Keyboard.kt:49)
+	at org.jire.overwatcheat.aimbot.ToggleUIThread.toggleUI(ToggleUIThread.kt:44)
+	at org.jire.overwatcheat.aimbot.ToggleUIThread.run(ToggleUIThread.kt:35)
+Caused by: java.lang.IllegalArgumentException: Invalid alignment constraint for member layout: i4
+	at java.base/jdk.internal.foreign.layout.StructLayoutImpl.of(StructLayoutImpl.java:49)
+	at java.base/java.lang.foreign.MemoryLayout.lambda$structLayout$1(MemoryLayout.java:723)
+	at java.base/jdk.internal.foreign.Utils.wrapOverflow(Utils.java:267)
+	at java.base/java.lang.foreign.MemoryLayout.structLayout(MemoryLayout.java:722)
+	at org.jire.overwatcheat.nativelib.interception.Interception.<clinit>(Interception.kt:37)
+	... 3 more

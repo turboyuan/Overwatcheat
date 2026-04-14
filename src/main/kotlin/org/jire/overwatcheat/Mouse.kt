@@ -24,14 +24,14 @@ import org.jire.overwatcheat.nativelib.interception.Interception.interception_se
 import org.jire.overwatcheat.nativelib.interception.InterceptionFilter
 import org.jire.overwatcheat.nativelib.interception.InterceptionMouseFlag
 import java.lang.Thread.sleep
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.lang.foreign.MemorySession
 import java.lang.foreign.ValueLayout
 
 object Mouse {
 
     val mouseStroke =
-        MemorySegment.allocateNative(interceptionMouseStrokeLayout, MemorySession.global()).apply {
+        Arena.global().allocate(interceptionMouseStrokeLayout).apply {
             set(ValueLayout.JAVA_SHORT, 0, 0) // state
             set(ValueLayout.JAVA_SHORT, 2, 0) // flags
             set(ValueLayout.JAVA_SHORT, 4, 0) // rolling

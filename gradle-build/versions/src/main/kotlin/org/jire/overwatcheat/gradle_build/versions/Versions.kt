@@ -20,6 +20,6 @@ package org.jire.overwatcheat.gradle_build.versions
 
 object Versions {
 
-    const val KOTLIN = "1.8.0"
+    const val KOTLIN = "1.9.25"
 
 }
