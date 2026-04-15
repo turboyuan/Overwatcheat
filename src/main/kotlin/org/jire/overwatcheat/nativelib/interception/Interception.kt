@@ -18,48 +18,33 @@
 
 package org.jire.overwatcheat.nativelib.interception
 
-import java.lang.foreign.*
+import com.sun.jna.Pointer
 
+/**
+ * Facade over [InterceptionLibrary], providing a singleton context
+ * and convenience [send] functions.
+ *
+ * All Panama FFI code has been removed; binding is done via JNA.
+ */
 object Interception {
 
-    private val linker = Linker.nativeLinker()
-    private val interception = SymbolLookup.libraryLookup("interception", Arena.global())
+    private val lib: InterceptionLibrary = InterceptionLibrary.INSTANCE
 
-    private val interception_create_context = linker.downcallHandle(
-        interception.find("interception_create_context").get(),
-        FunctionDescriptor.of(ValueLayout.ADDRESS)
-    )
+    /** Opaque interception context pointer. */
+    val context: Pointer = lib.interception_create_context()
 
-    val interceptionContext = interception_create_context()
+    /**
+     * Sends a mouse [stroke] to [device] using the global [context].
+     * @return number of strokes actually sent
+     */
+    fun send(device: Int, stroke: InterceptionStroke): Int =
+        lib.interception_send(context, device, stroke, 1)
 
-    private fun interception_create_context() = interception_create_context.invokeExact() as MemorySegment
-
-    val interceptionMouseStrokeLayout: GroupLayout = MemoryLayout.structLayout(
-        ValueLayout.JAVA_SHORT,                    // state:       offset 0
-        ValueLayout.JAVA_SHORT,                    // flags:       offset 2
-        ValueLayout.JAVA_SHORT,                    // rolling:     offset 4
-        MemoryLayout.paddingLayout(16),            // padding:     offset 6  (16 bits = 2 bytes)
-        ValueLayout.JAVA_INT,                      // x:           offset 8
-        ValueLayout.JAVA_INT,                      // y:           offset 12
-        ValueLayout.JAVA_INT                       // information: offset 16
-    )
-
-    private fun interceptionSendSymbol() = interception.find("interception_send").get()
-
-    private val interception_send = linker.downcallHandle(
-        interceptionSendSymbol(),
-        FunctionDescriptor.of(
-            ValueLayout.JAVA_INT,
-            ValueLayout.ADDRESS, ValueLayout.JAVA_INT, interceptionMouseStrokeLayout, ValueLayout.JAVA_INT
-        )
-    )
-
-    fun interception_send(context: MemorySegment, device: Int, stroke: MemorySegment, strokeCount: Int) =
-        interception_send.invokeExact(
-            context,
-            device,
-            stroke,
-            strokeCount
-        ) as Int
+    /**
+     * Sends a keyboard [stroke] to [device] using the global [context].
+     * @return number of strokes actually sent
+     */
+    fun send(device: Int, stroke: InterceptionKeyStroke): Int =
+        lib.interception_send(context, device, stroke, 1)
 
 }

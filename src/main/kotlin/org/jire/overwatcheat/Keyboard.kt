@@ -18,44 +18,31 @@
 
 package org.jire.overwatcheat
 
-import org.jire.overwatcheat.nativelib.User32Panama
-import org.jire.overwatcheat.nativelib.interception.Interception.interceptionContext
-import org.jire.overwatcheat.nativelib.interception.Interception.interception_send
+import org.jire.overwatcheat.nativelib.User32
+import org.jire.overwatcheat.nativelib.interception.Interception
 import org.jire.overwatcheat.nativelib.interception.InterceptionKeyState
-import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
+import org.jire.overwatcheat.nativelib.interception.InterceptionKeyStroke
 
 object Keyboard {
 
-    fun keyState(virtualKeyCode: Int) = User32Panama.GetKeyState(virtualKeyCode)
+    fun keyState(virtualKeyCode: Int): Short = User32.GetKeyState(virtualKeyCode)
 
-    fun keyPressed(virtualKeyCode: Int) = keyState(virtualKeyCode) < 0
+    fun keyPressed(virtualKeyCode: Int): Boolean = keyState(virtualKeyCode) < 0
 
-    fun keyReleased(virtualKeyCode: Int) = !keyPressed(virtualKeyCode)
+    fun keyReleased(virtualKeyCode: Int): Boolean = !keyPressed(virtualKeyCode)
 
-    val keyStroke =
-        Arena.global().allocate(18, 4).apply {
-            set(ValueLayout.JAVA_SHORT, 0, 0) // code
-            set(ValueLayout.JAVA_SHORT, 2, 0) // state
-            set(ValueLayout.JAVA_INT, 4, 0) // information
-        }
+    private val stroke = InterceptionKeyStroke()
 
-    fun pressKey(key: Int, deviceId: Int) {
-        keyStroke.run {
-            set(ValueLayout.JAVA_SHORT, 0, key.toShort())
-            set(ValueLayout.JAVA_SHORT, 2, InterceptionKeyState.INTERCEPTION_KEY_DOWN.toShort())
-        }
-        interception_send(interceptionContext, deviceId, keyStroke, 1)
+    fun pressKey(scanCode: Int, deviceId: Int) {
+        stroke.code = scanCode.toShort()
+        stroke.state = InterceptionKeyState.INTERCEPTION_KEY_DOWN.toShort()
+        Interception.send(deviceId, stroke)
     }
 
-    fun releaseKey(key: Int, deviceId: Int) {
-        keyStroke.run {
-            set(ValueLayout.JAVA_SHORT, 0, key.toShort())
-            set(ValueLayout.JAVA_SHORT, 2, InterceptionKeyState.INTERCEPTION_KEY_UP.toShort())
-        }
-        interception_send(interceptionContext, deviceId, keyStroke, 1)
+    fun releaseKey(scanCode: Int, deviceId: Int) {
+        stroke.code = scanCode.toShort()
+        stroke.state = InterceptionKeyState.INTERCEPTION_KEY_UP.toShort()
+        Interception.send(deviceId, stroke)
     }
 
 }
-

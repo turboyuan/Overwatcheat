@@ -21,9 +21,8 @@ package org.jire.overwatcheat
 import net.openhft.chronicle.core.Jvm
 import org.bytedeco.javacv.FFmpegLogCallback
 import org.jire.overwatcheat.aimbot.*
-import org.jire.overwatcheat.framegrab.FrameGrabber
-import org.jire.overwatcheat.framegrab.FrameGrabberThread
-import org.jire.overwatcheat.framegrab.FrameHandler
+import org.jire.overwatcheat.aimbot.DebugOverlay
+import org.jire.overwatcheat.framegrab.RobotFrameGrabberThread
 import org.jire.overwatcheat.nativelib.Kernel32
 import org.jire.overwatcheat.settings.Settings
 import org.jire.overwatcheat.util.PreciseSleeper
@@ -38,7 +37,6 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         Kernel32.SetPriorityClass(Kernel32.GetCurrentProcess(), Kernel32.HIGH_PRIORITY_CLASS)
-        FFmpegLogCallback.set()
 
         Settings.read()
 
@@ -54,18 +52,17 @@ object Main {
         val aimColorMatcher = AimColorMatcher()
         aimColorMatcher.initializeMatchSet()
 
-        val frameHandler: FrameHandler = AimFrameHandler(aimColorMatcher)
+        val frameHandler = AimFrameHandler(aimColorMatcher, captureOffsetX, captureOffsetY)
 
-        val frameGrabber = FrameGrabber(
-            Settings.windowTitleSearch,
-            Settings.fps,
-            captureWidth,
-            captureHeight,
-            captureOffsetX,
-            captureOffsetY
+        // Start debug overlay
+        DebugOverlay.start(captureOffsetX, captureOffsetY)
+
+        val frameGrabberThread = RobotFrameGrabberThread(
+            captureOffsetX, captureOffsetY,
+            captureWidth, captureHeight,
+            frameHandler,
+            Settings.fps
         )
-
-        val frameGrabberThread = FrameGrabberThread(frameGrabber, frameHandler)
 
         val maxSnapX = (captureWidth / Settings.maxSnapDivisor).toInt()
         val maxSnapY = (captureHeight / Settings.maxSnapDivisor).toInt()

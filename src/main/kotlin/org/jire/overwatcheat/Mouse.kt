@@ -18,50 +18,42 @@
 
 package org.jire.overwatcheat
 
-import org.jire.overwatcheat.nativelib.interception.Interception.interceptionContext
-import org.jire.overwatcheat.nativelib.interception.Interception.interceptionMouseStrokeLayout
-import org.jire.overwatcheat.nativelib.interception.Interception.interception_send
+import org.jire.overwatcheat.nativelib.interception.Interception
 import org.jire.overwatcheat.nativelib.interception.InterceptionFilter
 import org.jire.overwatcheat.nativelib.interception.InterceptionMouseFlag
+import org.jire.overwatcheat.nativelib.interception.InterceptionStroke
 import java.lang.Thread.sleep
-import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
 
 object Mouse {
 
-    val mouseStroke =
-        Arena.global().allocate(interceptionMouseStrokeLayout).apply {
-            set(ValueLayout.JAVA_SHORT, 0, 0) // state
-            set(ValueLayout.JAVA_SHORT, 2, 0) // flags
-            set(ValueLayout.JAVA_SHORT, 4, 0) // rolling
-            set(ValueLayout.JAVA_INT, 8, 0) // x
-            set(ValueLayout.JAVA_INT, 12, 0) // y
-            set(
-                ValueLayout.JAVA_SHORT, 14,
-                (InterceptionMouseFlag.INTERCEPTION_MOUSE_MOVE_RELATIVE or
-                        InterceptionMouseFlag.INTERCEPTION_MOUSE_CUSTOM).toShort()
-            ) // information
-        }
+    private val moveStroke = InterceptionStroke().apply {
+        state = 0
+        flags = (InterceptionMouseFlag.INTERCEPTION_MOUSE_MOVE_RELATIVE or
+                InterceptionMouseFlag.INTERCEPTION_MOUSE_CUSTOM).toShort()
+        rolling = 0
+        x = 0
+        y = 0
+        information = 0
+    }
+
+    private val clickStroke = InterceptionStroke()
 
     fun move(x: Int, y: Int, deviceID: Int) {
-        mouseStroke.run {
-            set(ValueLayout.JAVA_INT, 8, x)
-            set(ValueLayout.JAVA_INT, 12, y)
-        }
-        interception_send(interceptionContext, deviceID, mouseStroke, 1)
+        moveStroke.x = x
+        moveStroke.y = y
+        Interception.send(deviceID, moveStroke)
     }
 
     fun click(deviceID: Int) {
-        mouseStroke.run {
-            set(ValueLayout.JAVA_INT, 0, InterceptionFilter.INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN)
-            set(ValueLayout.JAVA_INT, 8, 0)
-            set(ValueLayout.JAVA_INT, 12, 0)
-        }
-        interception_send(interceptionContext, deviceID, mouseStroke, 1)
+        clickStroke.state = InterceptionFilter.INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN.toShort()
+        clickStroke.x = 0
+        clickStroke.y = 0
+        Interception.send(deviceID, clickStroke)
+
         sleep(300)
-        mouseStroke.set(ValueLayout.JAVA_INT, 0, InterceptionFilter.INTERCEPTION_MOUSE_LEFT_BUTTON_UP)
-        interception_send(interceptionContext, deviceID, mouseStroke, 1)
+
+        clickStroke.state = InterceptionFilter.INTERCEPTION_MOUSE_LEFT_BUTTON_UP.toShort()
+        Interception.send(deviceID, clickStroke)
     }
 
 }

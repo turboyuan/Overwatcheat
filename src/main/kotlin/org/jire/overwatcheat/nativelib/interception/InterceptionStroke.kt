@@ -21,14 +21,23 @@ package org.jire.overwatcheat.nativelib.interception
 import com.sun.jna.Structure
 import com.sun.jna.Structure.FieldOrder
 
-@FieldOrder("code", "state", "flags", "rolling", "x", "y", "information")
+/**
+ * Maps to InterceptionMouseStroke in interception.h:
+ *   unsigned short state;      // offset 0
+ *   unsigned short flags;      // offset 2
+ *   short rolling;             // offset 4
+ *   // 2 bytes padding         // offset 6
+ *   long x;                    // offset 8
+ *   long y;                    // offset 12
+ *   unsigned int information;  // offset 16
+ * Total: 20 bytes
+ */
+@FieldOrder("state", "flags", "rolling", "x", "y", "information")
 class InterceptionStroke(
-    @JvmField var code: Short = 0,
     @JvmField var state: Short = 0,
-    @JvmField var information: Short = 0,
+    @JvmField var flags: Short = 0,
     @JvmField var rolling: Short = 0,
     @JvmField var x: Int = 0,
     @JvmField var y: Int = 0,
-    @JvmField var flags: Short = 0,
-    var isInjected: Boolean = false
+    @JvmField var information: Int = 0,
 ) : Structure()

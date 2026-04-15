@@ -20,13 +20,16 @@ package org.jire.overwatcheat.aimbot
 
 object AimBotState {
 
-    @Volatile
-    var aimData = 0L
+    @Volatile var aimData = 0L
+    @Volatile var flicking = false
+    @Volatile var toggleUI = false
 
-    @Volatile
-    var flicking = false
-
-    @Volatile
-    var toggleUI = false
+    // Debug info for overlay
+    @Volatile var aimKeyPressed = false
+    @Volatile var lastDx = 0
+    @Volatile var lastDy = 0
+    @Volatile var lastMoveAttempt = ""   // e.g. "SENT(3,2)" or "SKIPPED(maxSnap)" or "SKIPPED(minSize)"
+    @Volatile var moveCount = 0L
 
 }
+

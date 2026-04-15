@@ -19,14 +19,14 @@
 package org.jire.overwatcheat.aimbot
 
 import org.jire.overwatcheat.Keyboard
-import org.jire.overwatcheat.nativelib.User32Panama
+import org.jire.overwatcheat.nativelib.User32
 
 class ToggleUIThread(
     private val keyboardId: Int,
     vararg keyCodes: Int
 ) : Thread("Toggle UI") {
 
-    private val scanCodes = keyCodes.map { User32Panama.MapVirtualKeyA(it) }.toTypedArray()
+    private val scanCodes = keyCodes.map { User32.MapVirtualKeyA(it) }.toTypedArray()
     private val scanCodesReversed = scanCodes.reversedArray()
 
     override fun run() {

@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.ShadowApplicationPlugin.SHADOW_INSTALL_TASK_NAME
 import com.github.jengelman.gradle.plugins.shadow.ShadowApplicationPlugin.SHADOW_SCRIPTS_TASK_NAME
-import org.jetbrains.kotlin.incremental.deleteRecursivelyOrThrow
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 plugins {
     id("overwatcheat-kotlin-project")
@@ -46,8 +47,7 @@ application {
         "-XX:+UnlockExperimentalVMOptions",
         "-XX:+UseZGC",
 
-        "--enable-native-access=ALL-UNNAMED",
-
+        // JNA requires access to sun.misc.Unsafe on JDK 21+
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
         "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
         "--add-opens=java.base/java.io=ALL-UNNAMED",
@@ -59,6 +59,23 @@ application {
 }
 
 tasks {
+    // 配置 `run` task，直接 ./gradlew run 即可运行，无需打包
+    named<JavaExec>("run") {
+        // 工作目录设为项目根目录，这样能找到 overwatcheat.cfg 和 interception.dll
+        workingDir = rootDir
+        // 构建 DLL 搜索路径：项目根目录 + Interception/library/x64 + 系统默认
+        val dllSearchPaths = mutableListOf(rootDir.absolutePath)
+        val interceptionDir = file("Interception/library/x64")
+        if (interceptionDir.exists()) {
+            dllSearchPaths += interceptionDir.absolutePath
+        }
+        val defaultLibPath = System.getProperty("java.library.path") ?: ""
+        dllSearchPaths += defaultLibPath
+        val joinedPath = dllSearchPaths.joinToString(File.pathSeparator)
+        systemProperty("java.library.path", joinedPath)
+        systemProperty("jna.library.path", joinedPath)
+    }
+
     configureShadowJar()
     configureOverwatcheat()
 }
@@ -104,17 +121,25 @@ fun TaskContainerScope.configureOverwatcheat() {
             val buildDir = file("build/")
 
             val dir = buildDir.resolve(name)
-            if (dir.exists()) dir.deleteRecursivelyOrThrow()
+            // Graceful delete: if dir is locked (e.g. run.bat still running), fall through
+            // and just overwrite the individual files instead of failing the whole build.
+            if (dir.exists()) dir.deleteRecursively()
             dir.mkdirs()
 
             val jarName = "${name}.jar"
             val jar = dir.resolve(jarName)
             val allJar = buildDir.resolve("libs/overwatcheat.jar")
-            allJar.copyTo(jar, true)
+            // Use NIO Files.copy with REPLACE_EXISTING + ATOMIC_MOVE for robustness
+            // when the jar is still held open by a running process.
+            Files.copy(allJar.toPath(), jar.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
             dir.writeStartBat(name, jarName)
 
-            fun File.copyFromRoot(path: String) = file(path).copyTo(resolve(path), true)
+            fun File.copyFromRoot(path: String) {
+                val src = file(path)
+                val dst = resolve(path)
+                Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            }
 
             dir.copyFromRoot("overwatcheat.cfg")
             dir.copyFromRoot("LICENSE.txt")
@@ -123,7 +148,15 @@ fun TaskContainerScope.configureOverwatcheat() {
             // 自动复制 interception.dll（如果存在）
             val interceptionDll = file("Interception/library/x64/interception.dll")
             if (interceptionDll.exists()) {
-                interceptionDll.copyTo(dir.resolve("interception.dll"), true)
+                Files.copy(
+                    interceptionDll.toPath(),
+                    dir.resolve("interception.dll").toPath(),
+                    StandardCopyOption.REPLACE_EXISTING
+                )
+                println("✓ interception.dll copied to ${dir.resolve("interception.dll")}")
+            } else {
+                println("⚠ WARNING: interception.dll not found at ${interceptionDll.absolutePath}")
+                println("  Please extract it from Interception.zip: Interception/library/x64/interception.dll")
             }
         }
     }
@@ -135,6 +168,6 @@ fun File.writeStartBat(name: String, jarName: String) =
             """@echo off
 cd /d "%~dp0"
 title $name
-java ${application.applicationDefaultJvmArgs.joinToString(" ")} -jar "$jarName"
+java -Djava.library.path=. -Djna.library.path=. ${application.applicationDefaultJvmArgs.joinToString(" ")} -jar "$jarName"
 pause"""
         )

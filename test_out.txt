@@ -1,0 +1,34 @@
+> Task :gradle-build:settings:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-build:versions:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-build:versions:compileKotlin UP-TO-DATE
+> Task :gradle-build:versions:compileJava NO-SOURCE
+> Task :gradle-build:settings:compileKotlin UP-TO-DATE
+> Task :gradle-build:settings:compileJava NO-SOURCE
+> Task :gradle-build:settings:pluginDescriptors UP-TO-DATE
+> Task :gradle-build:settings:processResources UP-TO-DATE
+> Task :gradle-build:settings:classes UP-TO-DATE
+> Task :gradle-build:settings:jar UP-TO-DATE
+> Task :gradle-build:versions:pluginDescriptors UP-TO-DATE
+> Task :gradle-build:versions:processResources UP-TO-DATE
+> Task :gradle-build:versions:classes UP-TO-DATE
+> Task :gradle-build:versions:jar UP-TO-DATE
+Type-safe project accessors is an incubating feature.
+> Task :gradle-build:projects:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-build:projects:compileKotlin UP-TO-DATE
+> Task :gradle-build:projects:compileJava NO-SOURCE
+> Task :gradle-build:projects:pluginDescriptors UP-TO-DATE
+> Task :gradle-build:projects:processResources UP-TO-DATE
+> Task :gradle-build:projects:classes UP-TO-DATE
+> Task :gradle-build:projects:jar UP-TO-DATE
+
+> Configure project :
+The Project.getConvention() method has been deprecated. This is scheduled to be removed in Gradle 9.0. Consult the upgrading guide for further information: https://docs.gradle.org/8.5/userguide/upgrading_version_8.html#deprecated_access_to_conventions
+The org.gradle.api.plugins.Convention type has been deprecated. This is scheduled to be removed in Gradle 9.0. Consult the upgrading guide for further information: https://docs.gradle.org/8.5/userguide/upgrading_version_8.html#deprecated_access_to_conventions
+
+> Task :checkKotlinGradlePluginConfigurationErrors
+> Task :compileKotlin UP-TO-DATE
+> Task :compileJava NO-SOURCE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :run

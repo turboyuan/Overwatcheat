@@ -66,6 +66,7 @@ class AimBotThread(
             while (true) {
                 val elapsed = measureNanoTime {
                     val pressed = Keyboard.keyPressed(Settings.aimKey)
+                    AimBotState.aimKeyPressed = pressed
                     if (Settings.toggleInGameUI && wasPressed != pressed) {
                         AimBotState.toggleUI = true
                     }
@@ -93,16 +94,15 @@ class AimBotThread(
     }
 
     private fun useAimData(aimData: Long) {
-        if (aimData == 0L) return
+        if (aimData == 0L) {
+            AimBotState.lastMoveAttempt = "NO_DATA"
+            return
+        }
 
-        val dX = calculateDelta(
-            aimData, 48,
-            Settings.aimMinTargetWidth, Settings.aimOffsetX, captureCenterX
-        )
-        val dY = calculateDelta(
-            aimData, 16,
-            Settings.aimMinTargetHeight, Settings.aimOffsetY, captureCenterY
-        )
+        val dX = calculateDelta(aimData, 48, Settings.aimMinTargetWidth, Settings.aimOffsetX, captureCenterX)
+        val dY = calculateDelta(aimData, 16, Settings.aimMinTargetHeight, Settings.aimOffsetY, captureCenterY)
+        AimBotState.lastDx = dX
+        AimBotState.lastDy = dY
         performAim(dX, dY)
     }
 
@@ -129,16 +129,23 @@ class AimBotThread(
     }
 
     private fun performAim(dX: Int, dY: Int) {
-        if (FastAbs(dX) > maxSnapX || FastAbs(dY) > maxSnapY) return
+        if (dX == Int.MAX_VALUE || dY == Int.MAX_VALUE) {
+            AimBotState.lastMoveAttempt = "SKIP:minSize dX=$dX dY=$dY"
+            return
+        }
+        if (FastAbs(dX) > maxSnapX || FastAbs(dY) > maxSnapY) {
+            AimBotState.lastMoveAttempt = "SKIP:maxSnap dX=$dX dY=$dY (max $maxSnapX,$maxSnapY)"
+            return
+        }
 
         val randomSensitivityMultiplier = 1F - (random[Settings.aimJitterPercent] / 100F)
         val moveX = (dX / Settings.sensitivity * randomSensitivityMultiplier).toInt()
         val moveY = (dY / Settings.sensitivity * randomSensitivityMultiplier).toInt()
-        Mouse.move(
-            min(Settings.aimMaxMovePixels, moveX),
-            min(Settings.aimMaxMovePixels, moveY),
-            mouseId
-        )
+        val actualX = min(Settings.aimMaxMovePixels, moveX)
+        val actualY = min(Settings.aimMaxMovePixels, moveY)
+        Mouse.move(actualX, actualY, mouseId)
+        AimBotState.lastMoveAttempt = "SENT($actualX,$actualY) raw($moveX,$moveY) mouseId=$mouseId"
+        AimBotState.moveCount++
 
         applyFlick(moveX, moveY)
     }

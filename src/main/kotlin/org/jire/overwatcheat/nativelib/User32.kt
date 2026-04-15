@@ -27,4 +27,30 @@ object User32 : DirectNativeLib("user32") {
 
     external fun GetWindowTextA(hWnd: Pointer, lpString: ByteArray, nMaxCount: Int): Int
 
+    /**
+     * Returns the state of the specified virtual key.
+     * If the high-order bit is set (< 0 when treated as signed short), the key is pressed.
+     */
+    @JvmStatic
+    external fun GetKeyState(nVirtKey: Int): Short
+
+    /**
+     * Translates a virtual-key code to a scan code or character value.
+     * @param uCode       virtual-key code or scan code
+     * @param uMapType    translation to perform (see MAPVK_* constants)
+     */
+    @JvmStatic
+    external fun MapVirtualKeyA(uCode: Int, uMapType: Int): Int
+
+    /** Convenience overload: translates virtual-key to scan code (MAPVK_VK_TO_VSC). */
+    fun MapVirtualKeyA(uCode: Int) = MapVirtualKeyA(uCode, VirtualKeyMapType.MAPVK_VK_TO_VSC)
+
+    object VirtualKeyMapType {
+        const val MAPVK_VK_TO_VSC = 0
+        const val MAPVK_VSC_TO_VK = 1
+        const val MAPVK_VK_TO_CHAR = 2
+        const val MAPVK_VSC_TO_VK_EX = 3
+        const val MAPVK_VK_TO_VSC_EX = 4
+    }
+
 }

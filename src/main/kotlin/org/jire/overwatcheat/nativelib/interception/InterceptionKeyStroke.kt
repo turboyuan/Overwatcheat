@@ -16,23 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.jire.overwatcheat.nativelib
+package org.jire.overwatcheat.nativelib.interception
+
+import com.sun.jna.Structure
+import com.sun.jna.Structure.FieldOrder
 
 /**
- * Previously held Panama FFI bindings for User32.dll.
- * All functionality has been moved to [User32] (JNA DirectMapping).
- *
- * Kept as a thin alias to avoid breaking any call sites that may still reference this object.
+ * Maps to InterceptionKeyStroke in interception.h:
+ *   unsigned short code;        // offset 0  (scan code)
+ *   unsigned short state;       // offset 2  (key state flags)
+ *   unsigned int information;   // offset 4
+ * Total: 8 bytes
  */
-@Deprecated(
-    message = "Use User32 directly. This object is a no-op alias.",
-    replaceWith = ReplaceWith("User32", "org.jire.overwatcheat.nativelib.User32")
-)
-object User32Panama {
-
-    fun GetKeyState(nVirtKey: Int): Short = User32.GetKeyState(nVirtKey)
-
-    fun MapVirtualKeyA(uCode: Int, uMapType: Int = User32.VirtualKeyMapType.MAPVK_VK_TO_VSC): Int =
-        User32.MapVirtualKeyA(uCode, uMapType)
-
-}
+@FieldOrder("code", "state", "information")
+class InterceptionKeyStroke(
+    @JvmField var code: Short = 0,
+    @JvmField var state: Short = 0,
+    @JvmField var information: Int = 0,
+) : Structure()
